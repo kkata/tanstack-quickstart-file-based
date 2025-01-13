@@ -12,22 +12,17 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
-import { Route as AuthImport } from './routes/_auth'
 import { Route as IndexImport } from './routes/index'
 import { Route as PostsIndexImport } from './routes/posts/index'
 import { Route as PostsPostIdImport } from './routes/posts/$postId'
-import { Route as AuthDashboardImport } from './routes/_auth.dashboard'
+import { Route as authLayoutImport } from './routes/_auth/layout'
+import { Route as authDashboardImport } from './routes/_auth/dashboard'
 
 // Create/Update Routes
 
 const LoginRoute = LoginImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AuthRoute = AuthImport.update({
-  id: '/_auth',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -49,10 +44,15 @@ const PostsPostIdRoute = PostsPostIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthDashboardRoute = AuthDashboardImport.update({
+const authLayoutRoute = authLayoutImport.update({
+  id: '/_auth/_layout',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const authDashboardRoute = authDashboardImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => authLayoutRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -66,13 +66,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthImport
-      parentRoute: typeof rootRoute
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -80,12 +73,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
-    '/_auth/dashboard': {
-      id: '/_auth/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthDashboardImport
-      parentRoute: typeof AuthImport
+    '/_auth/_layout': {
+      id: '/_auth/_layout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof authLayoutImport
+      parentRoute: typeof rootRoute
     }
     '/posts/$postId': {
       id: '/posts/$postId'
@@ -101,77 +94,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/_auth/_layout/dashboard': {
+      id: '/_auth/_layout/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof authDashboardImport
+      parentRoute: typeof authLayoutImport
+    }
   }
 }
 
 // Create and export the route tree
 
-interface AuthRouteChildren {
-  AuthDashboardRoute: typeof AuthDashboardRoute
+interface authLayoutRouteChildren {
+  authDashboardRoute: typeof authDashboardRoute
 }
 
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthDashboardRoute: AuthDashboardRoute,
+const authLayoutRouteChildren: authLayoutRouteChildren = {
+  authDashboardRoute: authDashboardRoute,
 }
 
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+const authLayoutRouteWithChildren = authLayoutRoute._addFileChildren(
+  authLayoutRouteChildren,
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
-  '/dashboard': typeof AuthDashboardRoute
+  '': typeof authLayoutRouteWithChildren
   '/posts/$postId': typeof PostsPostIdRoute
   '/posts': typeof PostsIndexRoute
+  '/dashboard': typeof authDashboardRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
-  '/dashboard': typeof AuthDashboardRoute
+  '': typeof authLayoutRouteWithChildren
   '/posts/$postId': typeof PostsPostIdRoute
   '/posts': typeof PostsIndexRoute
+  '/dashboard': typeof authDashboardRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
-  '/_auth/dashboard': typeof AuthDashboardRoute
+  '/_auth/_layout': typeof authLayoutRouteWithChildren
   '/posts/$postId': typeof PostsPostIdRoute
   '/posts/': typeof PostsIndexRoute
+  '/_auth/_layout/dashboard': typeof authDashboardRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/login' | '/dashboard' | '/posts/$postId' | '/posts'
+  fullPaths: '/' | '/login' | '' | '/posts/$postId' | '/posts' | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/login' | '/dashboard' | '/posts/$postId' | '/posts'
+  to: '/' | '/login' | '' | '/posts/$postId' | '/posts' | '/dashboard'
   id:
     | '__root__'
     | '/'
-    | '/_auth'
     | '/login'
-    | '/_auth/dashboard'
+    | '/_auth/_layout'
     | '/posts/$postId'
     | '/posts/'
+    | '/_auth/_layout/dashboard'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRouteWithChildren
   LoginRoute: typeof LoginRoute
+  authLayoutRoute: typeof authLayoutRouteWithChildren
   PostsPostIdRoute: typeof PostsPostIdRoute
   PostsIndexRoute: typeof PostsIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRouteWithChildren,
   LoginRoute: LoginRoute,
+  authLayoutRoute: authLayoutRouteWithChildren,
   PostsPostIdRoute: PostsPostIdRoute,
   PostsIndexRoute: PostsIndexRoute,
 }
@@ -187,8 +189,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/_auth",
         "/login",
+        "/_auth/_layout",
         "/posts/$postId",
         "/posts/"
       ]
@@ -196,24 +198,24 @@ export const routeTree = rootRoute
     "/": {
       "filePath": "index.tsx"
     },
-    "/_auth": {
-      "filePath": "_auth.tsx",
-      "children": [
-        "/_auth/dashboard"
-      ]
-    },
     "/login": {
       "filePath": "login.tsx"
     },
-    "/_auth/dashboard": {
-      "filePath": "_auth.dashboard.tsx",
-      "parent": "/_auth"
+    "/_auth/_layout": {
+      "filePath": "_auth/layout.tsx",
+      "children": [
+        "/_auth/_layout/dashboard"
+      ]
     },
     "/posts/$postId": {
       "filePath": "posts/$postId.tsx"
     },
     "/posts/": {
       "filePath": "posts/index.tsx"
+    },
+    "/_auth/_layout/dashboard": {
+      "filePath": "_auth/dashboard.tsx",
+      "parent": "/_auth/_layout"
     }
   }
 }
